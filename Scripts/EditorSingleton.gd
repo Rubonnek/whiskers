@@ -38,23 +38,23 @@ func _unhandled_input(event : InputEvent) -> void:
 	if event is InputEventKey:
 		if Input.is_action_pressed("save"):
 			close_all()
-			modal_save.show()
+			modal_save.popup()
 			modal_save.current_file = get_node("/root/Editor/Mount/MainWindow/Editor/Info/Info/Name/Input").get_text() + '.json'
 		if Input.is_action_pressed("open"):
 			close_all()
-			modal_open.show()
+			modal_open.popup()
 		if Input.is_action_pressed("quit"):
 			close_all()
-			modal_quit_conf.show()
+			modal_quit_conf.popup()
 		if Input.is_action_pressed("help"):
 			close_all()
-			modal_about.show()
+			modal_about.popup()
 		if Input.is_action_pressed("new"):
 			close_all()
-			get_node("/root/Editor/Mount/Modals/New").show()
+			get_node("/root/Editor/Mount/Modals/New").popup()
 		if Input.is_action_pressed("import"):
 			close_all()
-			modal_import.show()
+			modal_import.popup()
 		if Input.is_action_pressed("undo"):
 			undo_history()
 		if Input.is_action_pressed("redo"):

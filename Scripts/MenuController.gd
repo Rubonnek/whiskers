@@ -43,28 +43,28 @@ func _on_Edit_pressed():
 
 func _on_About_pressed():
 	EditorSingleton.close_all()
-	aboutDialog.show()
+	aboutDialog.popup()
 
 func _on_Save_pressed():
 	EditorSingleton.close_all()
-	saveDialog.show()
+	saveDialog.popup()
 	saveDialog.current_file = get_node("../../Editor/Info/Info/Name/Input").get_text()+'.json'
 
 func _on_New_pressed():
 	EditorSingleton.close_all()
-	newDialog.show()
+	newDialog.popup()
 
 func _on_Open_pressed():
 	EditorSingleton.close_all()
-	openDialog.show()
+	openDialog.popup()
 
 func _on_Quit_pressed():
 	EditorSingleton.close_all()
-	quitDialog.show()
+	quitDialog.popup()
 
 func _on_Import_pressed():
 	EditorSingleton.close_all()
-	importDialog.show()
+	importDialog.popup()
 
 func _on_menAct_mouse_entered():
 	EditorSingleton.in_menu = true
