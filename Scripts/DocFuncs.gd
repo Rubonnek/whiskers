@@ -3,7 +3,7 @@ extends VBoxContainer
 func _ready():
 	populate_funcs()
 
-func _physics_process(delta):
+func _physics_process(_delta):
 	if EditorSingleton.has_player_singleton and !EditorSingleton.loaded_player_funcs:
 		print('we loaded our Player Singleton!')
 		clear_funcs()

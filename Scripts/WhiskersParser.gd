@@ -6,10 +6,10 @@ var format_dictionary : Dictionary = {} setget set_format_dictionary
 var default_base_instance : Object # Default base instance defined at _init method
 var base_instance : Object # Object used as a base instance when running expressions
 
-func _init(base_instance : Object = null):
-	default_base_instance = base_instance
+func _init(p_base_instance : Object = null):
+	default_base_instance = p_base_instance
 	
-	if not base_instance:
+	if not p_base_instance:
 		print("[WARN]: no base_instance for calling expressions.")
 
 static func open_whiskers(file_path : String) -> Dictionary:
@@ -29,8 +29,8 @@ static func open_whiskers(file_path : String) -> Dictionary:
 	
 	return dialogue_data
 
-static func parse_whiskers(data : Dictionary) -> Dictionary:
-	return data
+static func parse_whiskers(p_data : Dictionary) -> Dictionary:
+	return p_data
 
 func start_dialogue(dialogue_data : Dictionary, custom_base_instance : Object = null) -> Dictionary:
 	if not dialogue_data.has("Start"):
@@ -55,13 +55,13 @@ func next(selected_option_key : String = "") -> Dictionary:
 	
 	if current_block.is_final:
 		# It is a final block, but it could be connected to more than an END node, we have to process them
-		process_block(current_block)
+		var _null_block = process_block(current_block)
 		end_dialogue()
 		return {}
 	
 	var next_block = {}
 	
-	handle_expressions(current_block.expressions)
+	var _results = handle_expressions(current_block.expressions)
 	
 	# DEALING WITH OPTIONS
 	if selected_option_key:
@@ -84,7 +84,7 @@ func next(selected_option_key : String = "") -> Dictionary:
 func process_block(block : Dictionary) -> Dictionary:
 	var next_block = {}
 	
-	handle_expressions(block.expressions)
+	var _results = handle_expressions(block.expressions)
 	
 	if not block.dialogue.empty():
 		next_block = generate_block(block.dialogue.key)
@@ -99,7 +99,6 @@ func handle_expressions(expressions_array : Array) -> Array:
 	if expressions_array.empty(): return []
 	
 	var results = []
-	var expression = Expression.new()
 	
 	for dic in expressions_array:
 		results.append(execute_expression(dic.logic))
@@ -129,7 +128,7 @@ func handle_jump(jump) -> Dictionary:
 	var next_block = {}
 	
 	# If this node has expressions that it is connected to, than we want to execute them
-	handle_expressions(jumped_to.expressions)
+	var _resutls = handle_expressions(jumped_to.expressions)
 	
 	if not jumped_to.dialogue.empty():
 		next_block = generate_block(jumped_to.dialogue.key)

@@ -41,16 +41,16 @@ func next():
 		for option in block.options:
 			add_button(option)
 
-func add_button(data):
+func add_button(p_data):
 	var node = Button.new()
 	var template = get_node("Template")
 	
 	node.rect_size = template.rect_size
 	node.rect_position = Vector2(template.rect_position.x, template.rect_position.y + lastBttnPos)
-	node.set_text(data.text)
+	node.set_text(p_data.text)
 	self.get_node("Buttons").add_child(node)
 	node.show()
-	node.set_name(data.key)
+	node.set_name(p_data.key)
 	lastBttnPos -= 35#? Yes, yes. I've thought it over quite thoroughly
 
 func reset():

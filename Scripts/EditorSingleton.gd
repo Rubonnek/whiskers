@@ -24,20 +24,22 @@ var last_save : = 0
 
 var node_names : = ['Dialogue', 'Option', 'Expression', 'Condition', 'Jump', 'End', 'Start', 'Comment']
 var has_graph : = false
+var node_type_regex : RegEx = RegEx.new()
+
+func _ready():
+	assert(node_type_regex.compile("[a-zA-Z]+") == OK, "Could not compile regex!")
 
 func get_node_type(name : String):
-	var regex : = RegEx.new()
-	regex.compile("[a-zA-Z]+")
-	var result : RegExMatch = regex.search(name)
-	if result:
-		return result.get_string()
+		var result : RegExMatch = node_type_regex.search(name)
+		if result:
+			return result.get_string()
 
 func _unhandled_input(event : InputEvent) -> void:
 	if event is InputEventKey:
 		if Input.is_action_pressed("save"):
 			close_all()
 			modal_save.show()
-			modal_save.current_file = get_node("/root/Editor/Mount/MainWindow/Editor/Info/Info/Name/Input").get_text()+'.json'
+			modal_save.current_file = get_node("/root/Editor/Mount/MainWindow/Editor/Info/Info/Name/Input").get_text() + '.json'
 		if Input.is_action_pressed("open"):
 			close_all()
 			modal_open.show()
@@ -137,7 +139,7 @@ func undo_history() -> void:
 			else:
 				var last_instance = history_objects[last_instance_of(object['name'])]
 				for i in range(0, last_instance['connects_from'].size()):
-					graph.connect_node(last_instance['connects_from'][i+1], 0, object['name'], 0)
+					assert(graph.connect_node(last_instance['connects_from'][i+1], 0, object['name'], 0) == OK, "Could not connect node!")
 		
 		current_history -= 1
 		
@@ -178,7 +180,7 @@ func connection_in_timeline(name : String) -> void:
 		if history_objects[i]['connects_from']:
 			for j in range(0, history_objects[i]['connects_from'].size()):
 				if history_objects[i]['connects_from'][j+1] != name and history_objects[i]['name'] == name:
-					graph.connect_node(history_objects[i]['connects_from'][j+1], 0, name, 0)
+					assert(graph.connect_node(history_objects[i]['connects_from'][j+1], 0, name, 0) == OK, "Could not connect node!")
 
 func redo_history() -> void:
 	var graph : GraphEdit = get_node("/root/Editor/Mount/MainWindow/Editor/Graph/Dialogue Graph")
@@ -200,7 +202,7 @@ func redo_history() -> void:
 		if 'connect' in action:
 			if action == 'connect':
 				for i in range(0, object['connects_from'].size()):
-					graph.connect_node(object['connects_from'][i+1], 0, object['name'], 0)
+					assert(graph.connect_node(object['connects_from'][i+1], 0, object['name'], 0) == OK, "Could not connect node!")
 			else:
 				print('disconnect node')
 				var connections = graph.get_connection_list()

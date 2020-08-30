@@ -85,5 +85,5 @@ func _on_Redo_pressed():
 	EditorSingleton.redo_history()
 
 func _on_source_pressed():
-	OS.shell_open("https://github.com/littleMouseGames/whiskers")
+	assert(OS.shell_open("https://github.com/littleMouseGames/whiskers") == OK, "Could not open shell!")
 

@@ -7,9 +7,9 @@ var timer = 0
 var path = ''
 
 func _ready():
-	get_node("../../../../Modals/Save").connect("file_selected", self, "_save_whiskers")
-	get_node("../../../../Modals/Open").connect("file_selected", self, "pre_open")
-	get_node("../../../../Modals/Import").connect("file_selected", self, "_import_singleton")
+	assert(get_node("../../../../Modals/Save").connect("file_selected", self, "_save_whiskers") == OK, "Could not connect signal!")
+	assert(get_node("../../../../Modals/Open").connect("file_selected", self, "pre_open") == OK, "Could not connect signal!")
+	assert(get_node("../../../../Modals/Import").connect("file_selected", self, "_import_singleton") == OK, "Could not connect signal!")
 	
 	get_node("../Demo/Dialogue/Text").parse_bbcode("You haven't loaded anything yet! Press [b]Update Demo[/b] to load your current graph!")
 
@@ -54,7 +54,7 @@ func get_text(from):
 		return ''
 
 func _on_Dialogue_Graph_connection_request(from, from_slot, to, to_slot):
-	connect_node(from, from_slot, to, to_slot)
+	assert(connect_node(from, from_slot, to, to_slot) == OK, "Could not connect node!")
 	var type = EditorSingleton.get_node_type(to)
 	EditorSingleton.add_history(type, to, self.get_node(to).get_offset(), get_text(to), get_connections(to), 'connect')
 
@@ -150,10 +150,8 @@ func process_data():
 				'location':"",
 				'size':""
 		}
-		var currentCTSize = 0
-		var currentConnectsTo 
+		var currentConnectsTo = null
 		if name in data:
-			currentCTSize = data[name]['connects_to'].size()
 			currentConnectsTo = data[name]['connects_to']
 		
 		# are we a node with a text field?
@@ -202,12 +200,12 @@ func process_data():
 		# save this in our processed object
 		data[name] = tempData
 
-func _save_whiskers(path):
+func _save_whiskers(p_path):
 	process_data()
 	# write the file
-	print('saving file to: ', path)
+	print('saving file to: ', p_path)
 	var saveFile = File.new()
-	saveFile.open(path, File.WRITE)
+	saveFile.open(p_path, File.WRITE)
 	saveFile.store_line(to_json(data))
 	saveFile.close()
 	# clear our data node
@@ -216,10 +214,10 @@ func _save_whiskers(path):
 	EditorSingleton.update_tab_title(false)
 
 #======> Open file
-func _open_whiskers(path):
-	print('opening file: ', path)
+func _open_whiskers(p_path):
+	print('opening file: ', p_path)
 	var file = File.new()
-	file.open(path, File.READ)
+	file.open(p_path, File.READ)
 	var loadData = parse_json(file.get_as_text())
 	var nodeDataKeys = loadData.keys()
 	# we should restore our `info` tab data!
@@ -247,16 +245,16 @@ func _open_whiskers(path):
 				connectTo = loadData[nodeDataKeys[i]]['conditions']
 				# this is bad because it assumes `true` and `false` can *only* connect to one node
 				# this is a dumb assumption to make, and should be corrected soon:tm:
-				connect_node(nodeDataKeys[i], 0, connectTo['true'], 0) 
-				connect_node(nodeDataKeys[i], 1, connectTo['false'], 0) 
+				assert(connect_node(nodeDataKeys[i], 0, connectTo['true'], 0) == OK, "Could not connect node!")
+				assert(connect_node(nodeDataKeys[i], 1, connectTo['false'], 0) == OK, "Could not connect node!")
 			else:
 				connectTo = loadData[nodeDataKeys[i]]['connects_to']
 				# for each key
 				for x in range(0, connectTo.size()):
 					if 'Expression' in nodeDataKeys[i]:
-						connect_node(nodeDataKeys[i], 0, connectTo[x], 1)
+						assert(connect_node(nodeDataKeys[i], 0, connectTo[x], 1) == OK, "Could not connect node!")
 					else:
-						connect_node(nodeDataKeys[i], 0, connectTo[x], 0)
+						assert(connect_node(nodeDataKeys[i], 0, connectTo[x], 0) == OK, "Could not connect node!")
 	
 	var startOffset = self.get_node('Start').offset
 	var graphRect = self.rect_size
@@ -298,13 +296,13 @@ func clear_graph():
 			
 
 #==== IMPORT PLAYER SINGLETON
-func _import_singleton(path):
+func _import_singleton(p_path):
 	var file = File.new()
 	var script = GDScript.new()
 	var PlayerSingleton = Control.new()
 	PlayerSingleton.set_name('PlayerSingleton')
 	
-	file.open(path, File.READ)
+	file.open(p_path, File.READ)
 	var loadData = file.get_as_text()
 	
 	script.set_source_code(loadData)
@@ -315,18 +313,18 @@ func _import_singleton(path):
 
 #====== DRAG HANDLING
 # checks if we can recive the dropped data
-func can_drop_data(pos, data):
+func can_drop_data(_pos, _data):
 	return true
 
 # triggers on target drop
-func drop_data(pos, data):
+func drop_data(_pos, p_data):
 	var nodes = EditorSingleton.node_names
 	var inNode = false
 	var localMousePos = self.get_child(0).get_local_mouse_position()
 	for i in range(0, nodes.size()):
-		if nodes[i] in data:
+		if nodes[i] in p_data:
 			init_scene(nodes[i]+".tscn", localMousePos)
 			inNode = true
 		elif !inNode and i + 1 == nodes.size():
 			var name = init_scene('Expression.tscn', localMousePos)
-			get_node(name).get_node("Lines").get_child(0).set_text(data)
+			get_node(name).get_node("Lines").get_child(0).set_text(p_data)

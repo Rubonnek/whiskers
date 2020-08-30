@@ -2,14 +2,13 @@ extends GraphNode
 
 func _on_Node_close_request():
 	self.queue_free()
-	print('removing node')
 	EditorSingleton.update_stats(self.name, '-1')
 	EditorSingleton.add_history(get_type(self.name), self.name, self.get_offset(), get_text(self.name), get_node('../').get_connections(self.name), 'remove')
 
 func _on_Node_resize_request(new_minsize):
 	self.rect_size = new_minsize
 
-func _on_Node_dragged(from, to):
+func _on_Node_dragged(_from, to):
 	get_node('../').lastNodePosition = to
 	EditorSingleton.add_history(get_type(self.name), self.name, to, get_text(self.name), get_node('../').get_connections(self.name), 'move')
 
@@ -30,7 +29,7 @@ func get_type(name):
 		if name in nodes[i]:
 			return nodes[i]
 
-func get_text(name):
+func get_text(_name):
 	if self.has_node('Lines'):
 		return self.get_node('Lines').get_child(0).get_text()
 	else:
