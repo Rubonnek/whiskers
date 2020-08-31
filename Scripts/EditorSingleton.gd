@@ -55,6 +55,9 @@ func _unhandled_input(event : InputEvent) -> void:
 		if Input.is_action_pressed("import"):
 			close_all()
 			modal_import.popup()
+		if Input.is_action_pressed("manage"):
+			close_all()
+			var _success : int = OS.shell_open(str("file://" + OS.get_user_data_dir()))
 		if Input.is_action_pressed("undo"):
 			undo_history()
 		if Input.is_action_pressed("redo"):

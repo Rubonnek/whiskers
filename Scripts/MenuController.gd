@@ -66,6 +66,10 @@ func _on_Import_pressed():
 	EditorSingleton.close_all()
 	importDialog.popup()
 
+func _on_Open_Data_Directory():
+	EditorSingleton.close_all()
+	var _success = OS.shell_open(str("file://" + OS.get_user_data_dir()))
+
 func _on_menAct_mouse_entered():
 	EditorSingleton.in_menu = true
 
