@@ -320,7 +320,7 @@ func can_drop_data(_pos, _data):
 func drop_data(_pos, p_data):
 	var nodes = EditorSingleton.node_names
 	var inNode = false
-	var localMousePos = self.get_child(0).get_local_mouse_position()
+	var localMousePos = self.get_child(0).get_transform().xform_inv(_pos) / get_zoom()
 	for i in range(0, nodes.size()):
 		if nodes[i] in p_data:
 			init_scene(nodes[i]+".tscn", localMousePos)
