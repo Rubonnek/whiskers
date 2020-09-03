@@ -13,28 +13,24 @@ func _init(p_base_instance : Object = null):
 	m_default_base_instance = p_base_instance
 	
 	if not p_base_instance:
-		print("[WARN]: no m_base_instance for calling expressions.")
+		push_warning("no m_base_instance for calling expressions.")
 
 static func open_whiskers(file_path : String) -> Dictionary:
 	var file = File.new()
 	
 	var error = file.open(file_path, File.READ)
 	if error:
-		print("[ERROR]: couldn't open file at %s. Error number %s." % [file_path, error])
+		push_error("couldn't open file at %s. Error number %s." % [file_path, error])
 		return {}
 	
-	var dialogue_data = parse_json(file.get_as_text())
+	var dialogue_data : Dictionary = parse_json(file.get_as_text())
 	file.close()
-	
-	if not dialogue_data is Dictionary:
-		print("[ERROR]: failed to parse whiskers file. Is it a valid exported whiskers file?")
-		return {}
-	
+
 	return dialogue_data
 
 func start_dialogue(dialogue_data : Dictionary, custom_base_instance : Object = null) -> Dictionary:
 	if not dialogue_data.has("Start"):
-		print("[ERROR]: not a valid whiskers m_data, it has not the key Start.")
+		push_error("not a valid whiskers m_data, it does not have 'Start' key.")
 		return {}
 	
 	m_base_instance = custom_base_instance if custom_base_instance else m_default_base_instance
@@ -50,7 +46,7 @@ func end_dialogue() -> void:
 
 func next(selected_option_key : String = "") -> Dictionary:
 	if not m_data:
-		print("[WARN]: trying to call next() on a finalized dialogue.")
+		push_warning("trying to call next() on a finalized dialogue.")
 		return {}
 	
 	if m_current_block.is_final:
@@ -67,12 +63,14 @@ func next(selected_option_key : String = "") -> Dictionary:
 	if selected_option_key:
 		# Generate a block containing all the nodes that this options is connected with
 		var option_block = generate_block(selected_option_key)
-		if option_block.empty(): return {}
+		if option_block.empty():
+			push_warning("Option block empty. Was this intended?")
+			return {}
 		
 		next_block = process_block(option_block)
 		
 	elif not m_current_block.options.empty():
-		print("[WARN]: no option was passed as argument, but there was options available. This could cause an infinite loop. Use wisely.")
+		push_warning("no option was passed as argument, but there was options available. This could cause an infinite loop. Use wisely.")
 	
 	else:
 		next_block = process_block(m_current_block)
@@ -110,7 +108,7 @@ func handle_condition(condition : Dictionary) -> Dictionary:
 	var next_block = {}
 	
 	if not result is bool:
-		print("[ERROR]: the expression used as input for a condition node should return a boolean, but it is returning %s instead." % result)
+		push_error("the expression used as input for a condition node should return a boolean, but it is returning %s instead." % result)
 		return {}
 	
 	if result:
@@ -147,18 +145,18 @@ func execute_expression(expression_text : String):
 	
 	var error = expression.parse(expression_text)
 	if error:
-		print("[ERROR]: unable to parse expression %s. Error: %s." % [expression_text, error])
+		push_error("unable to parse expression %s. Error: %s." % [expression_text, error])
 	else:
 		result = expression.execute([], m_base_instance, true)
 		if expression.has_execute_failed():
-			print("[ERROR]: unable to execute expression %s." % expression_text)
+			push_error("unable to execute expression %s." % expression_text)
 	
 	return result
 
 # A block is a Dictionary containing a node and every node it is connected to, by type and it's informations.
 func generate_block(node_key : String) -> Dictionary:
 	if not m_data.has(node_key):
-		print("[ERROR]: trying to create block from inexisting node %s. Aborting.", node_key)
+		push_error("trying to create block from inexisting node %s. Aborting." % node_key)
 		return {}
 		
 	# Block template
@@ -189,7 +187,7 @@ func generate_block(node_key : String) -> Dictionary:
 	for connected_node_key in m_data[node_key].connects_to:
 		if "Dialogue" in connected_node_key:
 			if not block.dialogue.empty(): # It doesn't make sense to connect two dialogue nodes
-				print("[WARN]: more than one Dialogue node connected. Defaulting to the first, key: %s, text: %s." % [block.dialogue.key, block.text])
+				push_warning("more than one Dialogue node connected. Defaulting to the first, key: %s, text: %s." % [block.dialogue.key, block.text])
 				continue
 			
 			var dialogue = {
@@ -213,7 +211,7 @@ func generate_block(node_key : String) -> Dictionary:
 			
 		elif "Condition" in connected_node_key:
 			if not block.condition.empty(): # It also doesn't make sense to connect two Condition nodes
-				print("[WARN]: more than one Condition node connected. Defaulting to the first, key: %s." % block.condition.key)
+				push_warning("more than one Condition node connected. Defaulting to the first, key: %s." % block.condition.key)
 				continue
 			
 			block.condition = process_condition(connected_node_key)
@@ -229,7 +227,7 @@ func generate_block(node_key : String) -> Dictionary:
 		
 		elif "Jump" in connected_node_key:
 			if not block.jump.empty():
-				print("[WARN]: more than one Jump node connected. Defaulting to the first, key: %s, id: %d." % [connected_node_key, block.jump.id])
+				push_warning("more than one Jump node connected. Defaulting to the first, key: %s, id: %d." % [connected_node_key, block.jump.id])
 				continue
 			
 			# Just like with the Expression node a linear search is needed to find the matching jump node.
@@ -240,7 +238,7 @@ func generate_block(node_key : String) -> Dictionary:
 					break
 			
 			if not match_key:
-				print("[ERROR]: no other node with the id %s was found. Aborting." % m_data[connected_node_key].text)
+				push_error("no other node with the id %s was found. Aborting." % m_data[connected_node_key].text)
 				return {}
 				
 			var jump = {
@@ -270,7 +268,7 @@ func process_condition(passed_key : String) -> Dictionary:
 			break
 	
 	if not input_logic:
-		print("[ERROR]: no input for the condition node %s was found." % passed_key)
+		push_error("no input for the condition node %s was found." % passed_key)
 		return {}
 	
 	var condition = {
