@@ -1,20 +1,19 @@
 class_name WhiskersWalker
 extends Resource
 
-var m_data : Dictionary
+var m_dialogue_data : Dictionary
 var m_current_block : Dictionary
 var m_format_dictionary : Dictionary = {} setget set_format_dictionary
 # TODO: Remove redundant(?) default_base_instance
 # TODO: Change base instance to WeakRef to avoid cyclic dependencies
-var m_default_base_instance : Object = null # Default base instance defined at _init method
 var m_base_instance : Object = null# Object used as a base instance when running expressions
 
-func _init(p_base_instance : Object = null) -> void:
-	m_default_base_instance = p_base_instance
-	
-	if not m_default_base_instance:
-		push_warning("no m_base_instance for calling expressions.")
+func set_dialogue_data(p_dialogue_data : Dictionary) -> void:
+	m_dialogue_data = p_dialogue_data
 
+func _init(p_base_instance : Object = null) -> void:
+	m_base_instance = p_base_instance
+	
 func open_whiskers(p_json_path : String) -> void:
 	var file = File.new()
 	
@@ -22,27 +21,25 @@ func open_whiskers(p_json_path : String) -> void:
 	if error:
 		push_error("couldn't open file at %s. Error number %s." % [p_json_path, error])
 	
-	var dialogue_data : Dictionary = parse_json(file.get_as_text())
+	m_dialogue_data = parse_json(file.get_as_text())
 	file.close()
 
-func start_dialogue(p_dialogue_data : Dictionary, p_custom_base_instance : Object = null) -> Dictionary:
-	if not p_dialogue_data.has("Start"):
-		push_error("not a valid whiskers m_data, it does not have 'Start' key.")
+func start_dialogue() -> Dictionary:
+	if not m_dialogue_data.has("Start"):
+		push_error("not a valid whiskers dictionary, it does not have a 'Start' key.")
 		return {}
 	
-	m_base_instance = p_custom_base_instance
-	m_data = p_dialogue_data
-	m_current_block = generate_block(m_data.Start.connects_to.front())
+	m_current_block = generate_block(m_dialogue_data.Start.connects_to.front())
 	
 	return m_current_block
 
 func end_dialogue() -> void:
-	m_data = {}
+	m_dialogue_data = {}
 	m_current_block = {}
 	m_base_instance = null
 
 func next(selected_option_key : String = "") -> Dictionary:
-	if not m_data:
+	if not m_dialogue_data:
 		push_warning("trying to call next() on a finalized dialogue.")
 		return {}
 
@@ -139,7 +136,7 @@ func handle_jump(jump) -> Dictionary:
 func execute_expression(expression_text : String):
 	var expression = Expression.new()
 	var result = null
-	
+
 	var error = expression.parse(expression_text)
 	if error:
 		push_error("unable to parse expression %s. Error: %s." % [expression_text, error])
@@ -152,7 +149,7 @@ func execute_expression(expression_text : String):
 
 # A block is a Dictionary containing a node and every node it is connected to, by type and it's informations.
 func generate_block(node_key : String) -> Dictionary:
-	if not m_data.has(node_key):
+	if not m_dialogue_data.has(node_key):
 		push_error("trying to create block from inexisting node %s. Aborting." % node_key)
 		return {}
 		
@@ -168,20 +165,20 @@ func generate_block(node_key : String) -> Dictionary:
 			}
 	
 	if "Dialogue" in node_key:
-		block.text = m_data[node_key].text.format(m_format_dictionary)
+		block.text = m_dialogue_data[node_key].text.format(m_format_dictionary)
 	
 	if "Jump" in node_key:
-		for key in m_data:
-			if "Jump" in key and m_data[node_key].text == m_data[key].text and node_key != key:
-				block = generate_block(m_data[key].connects_to[0])
+		for key in m_dialogue_data:
+			if "Jump" in key and m_dialogue_data[node_key].text == m_dialogue_data[key].text and node_key != key:
+				block = generate_block(m_dialogue_data[key].connects_to[0])
 				break
 	
 	if "Condition" in node_key: # this isn't very DRY
 		block.condition = process_condition(node_key)
 		block = process_block(block)
-	
+
 	# For each key of the connected nodes we put it on the block
-	for connected_node_key in m_data[node_key].connects_to:
+	for connected_node_key in m_dialogue_data[node_key].connects_to:
 		if "Dialogue" in connected_node_key:
 			if not block.dialogue.empty(): # It doesn't make sense to connect two dialogue nodes
 				push_warning("more than one Dialogue node connected. Defaulting to the first, key: %s, text: %s." % [block.dialogue.key, block.text])
@@ -195,14 +192,14 @@ func generate_block(node_key : String) -> Dictionary:
 		elif "Option" in connected_node_key:
 			var option = {
 					key = connected_node_key,
-					text = m_data[connected_node_key].text,
+					text = m_dialogue_data[connected_node_key].text,
 					}
 			block.options.append(option)
 			
 		elif "Expression" in connected_node_key:
 			var expression = {
 					key = connected_node_key,
-					logic = m_data[connected_node_key].logic
+					logic = m_dialogue_data[connected_node_key].logic
 					}
 			block.expressions.append(expression)
 			
@@ -218,7 +215,7 @@ func generate_block(node_key : String) -> Dictionary:
 			if 'Option' in parse_condition.key:
 				var option = {
 						key = parse_condition.key,
-						text = m_data[parse_condition.key].text,
+						text = m_dialogue_data[parse_condition.key].text,
 					}
 				block.options.append(option)
 		
@@ -229,18 +226,18 @@ func generate_block(node_key : String) -> Dictionary:
 			
 			# Just like with the Expression node a linear search is needed to find the matching jump node.
 			var match_key : String
-			for key in m_data:
-				if "Jump" in key and m_data[connected_node_key].text == m_data[key].text and connected_node_key != key:
+			for key in m_dialogue_data:
+				if "Jump" in key and m_dialogue_data[connected_node_key].text == m_dialogue_data[key].text and connected_node_key != key:
 					match_key = key
 					break
 			
 			if not match_key:
-				push_error("no other node with the id %s was found. Aborting." % m_data[connected_node_key].text)
+				push_error("no other node with the id %s was found. Aborting." % m_dialogue_data[connected_node_key].text)
 				return {}
 				
 			var jump = {
 					key = connected_node_key,
-					id = m_data[connected_node_key].text,
+					id = m_dialogue_data[connected_node_key].text,
 					goes_to_key = match_key
 					}
 			block.jump = jump
@@ -259,9 +256,9 @@ func generate_block(node_key : String) -> Dictionary:
 func process_condition(passed_key : String) -> Dictionary:
 	# Sadly the only way to find the Expression node that serves as input is to make a linear search
 	var input_logic : String
-	for key in m_data:
-		if "Expression" in key and m_data[key].connects_to.front() == passed_key:
-			input_logic = m_data[key].logic
+	for key in m_dialogue_data:
+		if "Expression" in key and m_dialogue_data[key].connects_to.front() == passed_key:
+			input_logic = m_dialogue_data[key].logic
 			break
 	
 	if not input_logic:
@@ -272,8 +269,8 @@ func process_condition(passed_key : String) -> Dictionary:
 			key = passed_key,
 			logic = input_logic,
 			goes_to_key = {
-					if_true = m_data[passed_key].conditions["true"],
-					if_false = m_data[passed_key].conditions["false"]
+					if_true = m_dialogue_data[passed_key].conditions["true"],
+					if_false = m_dialogue_data[passed_key].conditions["false"]
 					}
 			}
 	
