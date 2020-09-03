@@ -30,7 +30,7 @@ func _process(delta):
 
 func init():
 	parser = WhiskersParser.new(singleton)
-	dialogue_data = parser.parse_whiskers(data)
+	dialogue_data = data
 	block = parser.start_dialogue(dialogue_data)
 	next()
 

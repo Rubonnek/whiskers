@@ -1,16 +1,19 @@
 class_name WhiskersParser
+extends Resource
 
-var data : Dictionary
-var current_block : Dictionary
-var format_dictionary : Dictionary = {} setget set_format_dictionary
-var default_base_instance : Object # Default base instance defined at _init method
-var base_instance : Object # Object used as a base instance when running expressions
+var m_data : Dictionary
+var m_current_block : Dictionary
+var m_format_dictionary : Dictionary = {} setget set_format_dictionary
+# TODO: Remove redundant(?) default_base_instance
+# TODO: Change base instance to WeakRef to avoid cyclic dependencies
+var m_default_base_instance : Object = null # Default base instance defined at _init method
+var m_base_instance : Object = null# Object used as a base instance when running expressions
 
 func _init(p_base_instance : Object = null):
-	default_base_instance = p_base_instance
+	m_default_base_instance = p_base_instance
 	
 	if not p_base_instance:
-		print("[WARN]: no base_instance for calling expressions.")
+		print("[WARN]: no m_base_instance for calling expressions.")
 
 static func open_whiskers(file_path : String) -> Dictionary:
 	var file = File.new()
@@ -29,39 +32,36 @@ static func open_whiskers(file_path : String) -> Dictionary:
 	
 	return dialogue_data
 
-static func parse_whiskers(p_data : Dictionary) -> Dictionary:
-	return p_data
-
 func start_dialogue(dialogue_data : Dictionary, custom_base_instance : Object = null) -> Dictionary:
 	if not dialogue_data.has("Start"):
-		print("[ERROR]: not a valid whiskers data, it has not the key Start.")
+		print("[ERROR]: not a valid whiskers m_data, it has not the key Start.")
 		return {}
 	
-	base_instance = custom_base_instance if custom_base_instance else default_base_instance
-	data = dialogue_data
-	current_block = generate_block(data.Start.connects_to.front())
+	m_base_instance = custom_base_instance if custom_base_instance else m_default_base_instance
+	m_data = dialogue_data
+	m_current_block = generate_block(m_data.Start.connects_to.front())
 	
-	return current_block
+	return m_current_block
 
 func end_dialogue() -> void:
-	data = {}
-	current_block = {}
-	base_instance = default_base_instance
+	m_data = {}
+	m_current_block = {}
+	m_base_instance = m_default_base_instance
 
 func next(selected_option_key : String = "") -> Dictionary:
-	if not data:
+	if not m_data:
 		print("[WARN]: trying to call next() on a finalized dialogue.")
 		return {}
 	
-	if current_block.is_final:
+	if m_current_block.is_final:
 		# It is a final block, but it could be connected to more than an END node, we have to process them
-		var _null_block = process_block(current_block)
+		var _null_block = process_block(m_current_block)
 		end_dialogue()
 		return {}
 	
 	var next_block = {}
 	
-	var _results = handle_expressions(current_block.expressions)
+	var _results = handle_expressions(m_current_block.expressions)
 	
 	# DEALING WITH OPTIONS
 	if selected_option_key:
@@ -71,15 +71,15 @@ func next(selected_option_key : String = "") -> Dictionary:
 		
 		next_block = process_block(option_block)
 		
-	elif not current_block.options.empty():
+	elif not m_current_block.options.empty():
 		print("[WARN]: no option was passed as argument, but there was options available. This could cause an infinite loop. Use wisely.")
 	
 	else:
-		next_block = process_block(current_block)
+		next_block = process_block(m_current_block)
 	
-	current_block = next_block
+	m_current_block = next_block
 	
-	return current_block
+	return m_current_block
 
 func process_block(block : Dictionary) -> Dictionary:
 	var next_block = {}
@@ -149,7 +149,7 @@ func execute_expression(expression_text : String):
 	if error:
 		print("[ERROR]: unable to parse expression %s. Error: %s." % [expression_text, error])
 	else:
-		result = expression.execute([], base_instance, true)
+		result = expression.execute([], m_base_instance, true)
 		if expression.has_execute_failed():
 			print("[ERROR]: unable to execute expression %s." % expression_text)
 	
@@ -157,7 +157,7 @@ func execute_expression(expression_text : String):
 
 # A block is a Dictionary containing a node and every node it is connected to, by type and it's informations.
 func generate_block(node_key : String) -> Dictionary:
-	if not data.has(node_key):
+	if not m_data.has(node_key):
 		print("[ERROR]: trying to create block from inexisting node %s. Aborting.", node_key)
 		return {}
 		
@@ -173,12 +173,12 @@ func generate_block(node_key : String) -> Dictionary:
 			}
 	
 	if "Dialogue" in node_key:
-		block.text = data[node_key].text.format(format_dictionary)
+		block.text = m_data[node_key].text.format(m_format_dictionary)
 	
 	if "Jump" in node_key:
-		for key in data:
-			if "Jump" in key and data[node_key].text == data[key].text and node_key != key:
-				block = generate_block(data[key].connects_to[0])
+		for key in m_data:
+			if "Jump" in key and m_data[node_key].text == m_data[key].text and node_key != key:
+				block = generate_block(m_data[key].connects_to[0])
 				break
 	
 	if "Condition" in node_key: # this isn't very DRY
@@ -186,7 +186,7 @@ func generate_block(node_key : String) -> Dictionary:
 		block = process_block(block)
 	
 	# For each key of the connected nodes we put it on the block
-	for connected_node_key in data[node_key].connects_to:
+	for connected_node_key in m_data[node_key].connects_to:
 		if "Dialogue" in connected_node_key:
 			if not block.dialogue.empty(): # It doesn't make sense to connect two dialogue nodes
 				print("[WARN]: more than one Dialogue node connected. Defaulting to the first, key: %s, text: %s." % [block.dialogue.key, block.text])
@@ -200,14 +200,14 @@ func generate_block(node_key : String) -> Dictionary:
 		elif "Option" in connected_node_key:
 			var option = {
 					key = connected_node_key,
-					text = data[connected_node_key].text,
+					text = m_data[connected_node_key].text,
 					}
 			block.options.append(option)
 			
 		elif "Expression" in connected_node_key:
 			var expression = {
 					key = connected_node_key,
-					logic = data[connected_node_key].logic
+					logic = m_data[connected_node_key].logic
 					}
 			block.expressions.append(expression)
 			
@@ -223,7 +223,7 @@ func generate_block(node_key : String) -> Dictionary:
 			if 'Option' in parse_condition.key:
 				var option = {
 						key = parse_condition.key,
-						text = data[parse_condition.key].text,
+						text = m_data[parse_condition.key].text,
 					}
 				block.options.append(option)
 		
@@ -234,18 +234,18 @@ func generate_block(node_key : String) -> Dictionary:
 			
 			# Just like with the Expression node a linear search is needed to find the matching jump node.
 			var match_key : String
-			for key in data:
-				if "Jump" in key and data[connected_node_key].text == data[key].text and connected_node_key != key:
+			for key in m_data:
+				if "Jump" in key and m_data[connected_node_key].text == m_data[key].text and connected_node_key != key:
 					match_key = key
 					break
 			
 			if not match_key:
-				print("[ERROR]: no other node with the id %s was found. Aborting." % data[connected_node_key].text)
+				print("[ERROR]: no other node with the id %s was found. Aborting." % m_data[connected_node_key].text)
 				return {}
 				
 			var jump = {
 					key = connected_node_key,
-					id = data[connected_node_key].text,
+					id = m_data[connected_node_key].text,
 					goes_to_key = match_key
 					}
 			block.jump = jump
@@ -258,15 +258,15 @@ func generate_block(node_key : String) -> Dictionary:
 		elif "End" in connected_node_key and not "Jump" in node_key:
 			block.is_final = true
 	
-	current_block = block
-	return current_block
+	m_current_block = block
+	return m_current_block
 
 func process_condition(passed_key : String) -> Dictionary:
 	# Sadly the only way to find the Expression node that serves as input is to make a linear search
 	var input_logic : String
-	for key in data:
-		if "Expression" in key and data[key].connects_to.front() == passed_key:
-			input_logic = data[key].logic
+	for key in m_data:
+		if "Expression" in key and m_data[key].connects_to.front() == passed_key:
+			input_logic = m_data[key].logic
 			break
 	
 	if not input_logic:
@@ -277,12 +277,12 @@ func process_condition(passed_key : String) -> Dictionary:
 			key = passed_key,
 			logic = input_logic,
 			goes_to_key = {
-					if_true = data[passed_key].conditions["true"],
-					if_false = data[passed_key].conditions["false"]
+					if_true = m_data[passed_key].conditions["true"],
+					if_false = m_data[passed_key].conditions["false"]
 					}
 			}
 	
 	return condition
 
 func set_format_dictionary(value : Dictionary) -> void:
-	format_dictionary = value
+	m_format_dictionary = value
