@@ -29,7 +29,7 @@ func _process(delta):
 		singleton = DemoSingleton
 
 func init():
-	parser = WhiskersParser.new(singleton)
+	parser = WhiskersWalker.new(singleton)
 	dialogue_data = data
 	block = parser.start_dialogue(dialogue_data)
 	next()

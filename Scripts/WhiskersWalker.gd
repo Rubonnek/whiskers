@@ -1,4 +1,4 @@
-class_name WhiskersParser
+class_name WhiskersWalker
 extends Resource
 
 var m_data : Dictionary
@@ -9,32 +9,29 @@ var m_format_dictionary : Dictionary = {} setget set_format_dictionary
 var m_default_base_instance : Object = null # Default base instance defined at _init method
 var m_base_instance : Object = null# Object used as a base instance when running expressions
 
-func _init(p_base_instance : Object = null):
+func _init(p_base_instance : Object = null) -> void:
 	m_default_base_instance = p_base_instance
 	
-	if not p_base_instance:
+	if not m_default_base_instance:
 		push_warning("no m_base_instance for calling expressions.")
 
-static func open_whiskers(file_path : String) -> Dictionary:
+func open_whiskers(p_json_path : String) -> void:
 	var file = File.new()
 	
-	var error = file.open(file_path, File.READ)
+	var error = file.open(p_json_path, File.READ)
 	if error:
-		push_error("couldn't open file at %s. Error number %s." % [file_path, error])
-		return {}
+		push_error("couldn't open file at %s. Error number %s." % [p_json_path, error])
 	
 	var dialogue_data : Dictionary = parse_json(file.get_as_text())
 	file.close()
 
-	return dialogue_data
-
-func start_dialogue(dialogue_data : Dictionary, custom_base_instance : Object = null) -> Dictionary:
-	if not dialogue_data.has("Start"):
+func start_dialogue(p_dialogue_data : Dictionary, p_custom_base_instance : Object = null) -> Dictionary:
+	if not p_dialogue_data.has("Start"):
 		push_error("not a valid whiskers m_data, it does not have 'Start' key.")
 		return {}
 	
-	m_base_instance = custom_base_instance if custom_base_instance else m_default_base_instance
-	m_data = dialogue_data
+	m_base_instance = p_custom_base_instance
+	m_data = p_dialogue_data
 	m_current_block = generate_block(m_data.Start.connects_to.front())
 	
 	return m_current_block
@@ -42,13 +39,13 @@ func start_dialogue(dialogue_data : Dictionary, custom_base_instance : Object = 
 func end_dialogue() -> void:
 	m_data = {}
 	m_current_block = {}
-	m_base_instance = m_default_base_instance
+	m_base_instance = null
 
 func next(selected_option_key : String = "") -> Dictionary:
 	if not m_data:
 		push_warning("trying to call next() on a finalized dialogue.")
 		return {}
-	
+
 	if m_current_block.is_final:
 		# It is a final block, but it could be connected to more than an END node, we have to process them
 		var _null_block = process_block(m_current_block)
