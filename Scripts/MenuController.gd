@@ -12,7 +12,6 @@ onready var openDialog = get_node("../../../Modals/Open")
 onready var quitDialog = get_node("../../../Modals/QuitConf")
 onready var aboutDialog = get_node("../../../Modals/About")
 onready var newDialog = get_node("../../../Modals/New")
-onready var importDialog = get_node("../../../Modals/Import")
 
 func _on_File_pressed():
 	if(fileMenu.is_visible()):
@@ -61,10 +60,6 @@ func _on_Open_pressed():
 func _on_Quit_pressed():
 	EditorSingleton.close_all()
 	quitDialog.popup()
-
-func _on_Import_pressed():
-	EditorSingleton.close_all()
-	importDialog.popup()
 
 func _on_Open_Data_Directory():
 	EditorSingleton.close_all()

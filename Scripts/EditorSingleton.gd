@@ -4,7 +4,6 @@ onready var modal_save = get_node("/root/Editor/Mount/Modals/Save")
 onready var modal_open = get_node("/root/Editor/Mount/Modals/Open")
 onready var modal_quit_conf = get_node("/root/Editor/Mount/Modals/QuitConf")
 onready var modal_about = get_node("/root/Editor/Mount/Modals/About")
-onready var modal_import = get_node("/root/Editor/Mount/Modals/Import")
 
 onready var menu_file = get_node("/root/Editor/Mount/MainWindow/MenuBar/Menus/File/Menu")
 onready var menu_edit = get_node("/root/Editor/Mount/MainWindow/MenuBar/Menus/Edit/Menu")
@@ -52,9 +51,6 @@ func _unhandled_input(event : InputEvent) -> void:
 		if Input.is_action_pressed("new"):
 			close_all()
 			get_node("/root/Editor/Mount/Modals/New").popup()
-		if Input.is_action_pressed("import"):
-			close_all()
-			modal_import.popup()
 		if Input.is_action_pressed("manage"):
 			close_all()
 			var _success : int = OS.shell_open(str("file://" + OS.get_user_data_dir()))
@@ -69,7 +65,6 @@ func close_all() -> void:
 	modal_open.hide()
 	modal_quit_conf.hide()
 	modal_about.hide()
-	modal_import.hide()
 	# Menus
 	menu_file.hide()
 	menu_help.hide()

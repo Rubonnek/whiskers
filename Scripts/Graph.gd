@@ -9,7 +9,6 @@ var path = ''
 func _ready():
 	assert(get_node("../../../../Modals/Save").connect("file_selected", self, "_save_whiskers") == OK, "Could not connect signal!")
 	assert(get_node("../../../../Modals/Open").connect("file_selected", self, "pre_open") == OK, "Could not connect signal!")
-	assert(get_node("../../../../Modals/Import").connect("file_selected", self, "_import_singleton") == OK, "Could not connect signal!")
 	
 	get_node("../Demo/Dialogue/Text").parse_bbcode("You haven't loaded anything yet! Press [b]Update Demo[/b] to load your current graph!")
 
@@ -294,22 +293,6 @@ func clear_graph():
 		if not("GraphEditFilter" in child.get_class()) and not ("Control" in child.get_class()):
 			child.queue_free()
 			
-
-#==== IMPORT PLAYER SINGLETON
-func _import_singleton(p_path):
-	var file = File.new()
-	var script = GDScript.new()
-	var PlayerSingleton = Control.new()
-	PlayerSingleton.set_name('PlayerSingleton')
-	
-	file.open(p_path, File.READ)
-	var loadData = file.get_as_text()
-	
-	script.set_source_code(loadData)
-	script.reload()
-	PlayerSingleton.set_script(script)
-	get_tree().root.add_child(PlayerSingleton)
-	EditorSingleton.has_player_singleton = true
 
 #====== DRAG HANDLING
 # checks if we can recive the dropped data

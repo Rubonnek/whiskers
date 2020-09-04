@@ -205,6 +205,9 @@ anchor_bottom = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
 custom_styles/panel = SubResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
 
 [node name="Modals" type="Control" parent="Mount"]
 margin_left = 10.0
@@ -224,23 +227,6 @@ margin_bottom = 179.5
 theme = ExtResource( 1 )
 window_title = "Save Whiskers Project"
 resizable = true
-access = 1
-current_dir = "user://"
-current_path = "user://"
-
-[node name="Import" type="FileDialog" parent="Mount/Modals"]
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-margin_left = -303.5
-margin_top = -179.5
-margin_right = 303.5
-margin_bottom = 179.5
-theme = ExtResource( 1 )
-window_title = "Open a File"
-resizable = true
-mode = 0
 access = 1
 current_dir = "user://"
 current_path = "user://"
@@ -509,44 +495,6 @@ align = 2
 margin_top = 62.0
 margin_right = 116.0
 margin_bottom = 66.0
-custom_styles/separator = SubResource( 5 )
-
-[node name="Import" type="Button" parent="Mount/MainWindow/MenuBar/Menus/File/Menu/PanelContainer/VBoxContainer"]
-margin_top = 70.0
-margin_right = 116.0
-margin_bottom = 84.0
-custom_styles/hover = SubResource( 3 )
-custom_styles/pressed = SubResource( 3 )
-custom_styles/focus = SubResource( 3 )
-custom_styles/normal = SubResource( 4 )
-
-[node name="HSplitContainer" type="HSplitContainer" parent="Mount/MainWindow/MenuBar/Menus/File/Menu/PanelContainer/VBoxContainer/Import"]
-anchor_right = 1.0
-anchor_bottom = 1.0
-mouse_filter = 2
-dragger_visibility = 2
-
-[node name="Action" type="Label" parent="Mount/MainWindow/MenuBar/Menus/File/Menu/PanelContainer/VBoxContainer/Import/HSplitContainer"]
-margin_right = 58.0
-margin_bottom = 14.0
-size_flags_horizontal = 7
-size_flags_vertical = 6
-text = "Import"
-
-[node name="Hotkey" type="Label" parent="Mount/MainWindow/MenuBar/Menus/File/Menu/PanelContainer/VBoxContainer/Import/HSplitContainer"]
-margin_left = 58.0
-margin_right = 116.0
-margin_bottom = 14.0
-size_flags_horizontal = 7
-size_flags_vertical = 6
-custom_colors/font_color = Color( 0.611765, 0.611765, 0.611765, 1 )
-text = "CTRL-I"
-align = 2
-
-[node name="HSeparator3" type="HSeparator" parent="Mount/MainWindow/MenuBar/Menus/File/Menu/PanelContainer/VBoxContainer"]
-margin_top = 88.0
-margin_right = 116.0
-margin_bottom = 92.0
 custom_styles/separator = SubResource( 5 )
 
 [node name="OpenDataDir" type="Button" parent="Mount/MainWindow/MenuBar/Menus/File/Menu/PanelContainer/VBoxContainer"]
@@ -1304,9 +1252,6 @@ valign = 1
 [connection signal="mouse_entered" from="Mount/MainWindow/MenuBar/Menus/File/Menu/PanelContainer/VBoxContainer/Save" to="Mount/MainWindow/MenuBar/Menus" method="_on_menAct_mouse_entered"]
 [connection signal="mouse_exited" from="Mount/MainWindow/MenuBar/Menus/File/Menu/PanelContainer/VBoxContainer/Save" to="Mount/MainWindow/MenuBar/Menus" method="_on_menAct_mouse_exited"]
 [connection signal="pressed" from="Mount/MainWindow/MenuBar/Menus/File/Menu/PanelContainer/VBoxContainer/Save" to="Mount/MainWindow/MenuBar/Menus" method="_on_Save_pressed"]
-[connection signal="mouse_entered" from="Mount/MainWindow/MenuBar/Menus/File/Menu/PanelContainer/VBoxContainer/Import" to="Mount/MainWindow/MenuBar/Menus" method="_on_menAct_mouse_entered"]
-[connection signal="mouse_exited" from="Mount/MainWindow/MenuBar/Menus/File/Menu/PanelContainer/VBoxContainer/Import" to="Mount/MainWindow/MenuBar/Menus" method="_on_menAct_mouse_exited"]
-[connection signal="pressed" from="Mount/MainWindow/MenuBar/Menus/File/Menu/PanelContainer/VBoxContainer/Import" to="Mount/MainWindow/MenuBar/Menus" method="_on_Import_pressed"]
 [connection signal="mouse_entered" from="Mount/MainWindow/MenuBar/Menus/File/Menu/PanelContainer/VBoxContainer/OpenDataDir" to="Mount/MainWindow/MenuBar/Menus" method="_on_menAct_mouse_entered"]
 [connection signal="mouse_exited" from="Mount/MainWindow/MenuBar/Menus/File/Menu/PanelContainer/VBoxContainer/OpenDataDir" to="Mount/MainWindow/MenuBar/Menus" method="_on_menAct_mouse_exited"]
 [connection signal="pressed" from="Mount/MainWindow/MenuBar/Menus/File/Menu/PanelContainer/VBoxContainer/OpenDataDir" to="Mount/MainWindow/MenuBar/Menus" method="_on_Open_Data_Directory"]
